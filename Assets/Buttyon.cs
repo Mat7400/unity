@@ -21,6 +21,7 @@ public class Buttyon : MonoBehaviour
     
         public void menubutton()
     {
+        
         var input = GameObject.Find("InputField");
         if (input!=null)
             input.SetActive(false);
@@ -43,7 +44,21 @@ public class Buttyon : MonoBehaviour
         //transform2.position += new Vector3(30, 30, 0);
         //translate - двигает из того места где уже был
         transform2.Translate(40, 40, 0);
-        Debug.Log("BUTTON OK "+ counter);
+        
+        var obj = GameObject.Find("TextTextPlayer");
+        obj.SetActive(true);
+
+
+
+        if (obj.activeSelf) 
+        {
+
+            Debug.Log("BUTTON OK ACTIVE " + counter);
+        }
+        else
+        {
+            Debug.Log("BUTTON OK " + counter);
+        }
         counter++;
     } 
     public void Start()
