@@ -69,6 +69,7 @@
     <Compile Include="Assets\handler.cs" />
     <Compile Include="Assets\inputScript.cs" />
     <Compile Include="Assets\kar2.cs" />
+    <Compile Include="Assets\menuTextScript.cs" />
     <Compile Include="Assets\u1script.cs" />
     <Compile Include="Assets\wallright.cs" />
     <Compile Include="Assets\wallup.cs" />

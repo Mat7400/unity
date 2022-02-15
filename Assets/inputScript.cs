@@ -32,8 +32,8 @@ public class inputScript : MonoBehaviour
         count++;
         if (count % 20 == 0)
         {
-            Debug.Log("UPDATE input " + count + " curX=" + curX + " curY=" + curY
-                 + " speedX=" + speedX + " speedY=" + speedY);
+            //Debug.Log("UPDATE input " + count + " curX=" + curX + " curY=" + curY
+            //     + " speedX=" + speedX + " speedY=" + speedY);
             var transform2 = GameObject.Find("TextTextPlayer").GetComponent<Transform>();
             //transform2.position += new Vector3(30, 30, 0);
             //translate - двигает из того места где уже был
