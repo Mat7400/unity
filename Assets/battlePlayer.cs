@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class Player
@@ -17,11 +18,11 @@ public class Player
 
 
     public string name = "knight";
-    public Player()
+    public Player(System.Random rnd)
     {
         //set initial hp and damages
         gid = Guid.NewGuid().ToString();
-        System.Random rondom = new System.Random();
+        System.Random rondom = rnd;
         minDamage = rondom.Next(1, 5);
         maxDamage = rondom.Next(8, 12);
         HealPoints = rondom.Next(10, 25);
@@ -65,14 +66,16 @@ public class battlePlayer : MonoBehaviour
 {
 
     public static string playerName = "";
-    Player player = new Player();
-    Player enemy = new Player();
+    Player player ;
+    Player enemy ;
     bool gameend = false;
     // Start is called before the first frame update
     void Start()
     {
-        player = new Player();
-        enemy = new Player();
+        System.Random rnd = new System.Random();
+        player = new Player(rnd);
+        enemy = new Player(rnd);
+        //TODO: выбор персонажа (либо в меню либо случайно из 3-5 картинок в Ассетах)
 
         player.name = playerName;
         enemy.name = "KULAK";
@@ -87,17 +90,45 @@ public class battlePlayer : MonoBehaviour
 
     int lefrborder = -30;
     int rightborder = 30;
-    int playerspeed = 5;
-    int enemyspeed = -5;
+    int playerspeed = 2;
+    int enemyspeed = -2;
     int xplayer = -20;
     int xenemy = 20;
+    public void toMenu()
+    {
+        SceneManager.LoadScene("menu");
+    }
+        public void newgame()
+    {
+        System.Random rnd = new System.Random();
+        player = new Player(rnd);
+        enemy = new Player(rnd); 
+        player.name = playerName;
+        enemy.name = "KULAK";
+        var classtext = GameObject.Find("TextDamage").GetComponent<Text>();
+        classtext.text = player.name + " HP=" + player.HealPoints + " -- " + enemy.name + " HP=" + enemy.HealPoints;
+        classtext.color = Color.green;
+        xplayer = -20;
+        playerspeed = 2;
+        enemyspeed = -2;
+        xenemy = 20;
+        //
+        var playerObj = GameObject.Find("player2");
+        var enemyObj = GameObject.Find("enemy");
+        //get coordinates
+        var transformP = playerObj.GetComponent<Transform>();
+        var transformE = enemyObj.GetComponent<Transform>();
+        transformP.position = new Vector3(xplayer, 0, 0);
+        transformE.position = new Vector3(xenemy, 0, 0);
+        gameend = false;
 
+    }
     // Update is called once per frame
     void Update()
     {
         //animate player and enemy
-        //60fps - once in 0.5s
-        if (count % 30 == 0 && gameend==false)
+        //60fps - once in 1s
+        if (count % 60 == 0 && gameend==false)
         {
             var playerObj = GameObject.Find("player2");
             var enemyObj = GameObject.Find("enemy");
@@ -109,24 +140,31 @@ public class battlePlayer : MonoBehaviour
 
             transformP.Translate(playerspeed, 0, 0);
             transformE.Translate(enemyspeed, 0, 0);
+            //change x coord
             xplayer = xplayer + playerspeed;
             xenemy = xenemy + enemyspeed;
             //if not collide - move them
 
             //if border - change speed
-            if (xenemy>=rightborder)
+            if (xenemy >= rightborder || xenemy <= lefrborder)
                 //change speed
                 enemyspeed = enemyspeed * (-1);
-            if (xplayer >= lefrborder)
+            if (xplayer >= lefrborder || xplayer <= lefrborder)
                 //change speed
                 playerspeed = playerspeed * (-1);
 
+
             //if collide - count damage, change speed
-            if (xplayer == xenemy)
+            //
+            if ( (xplayer - xenemy < 6) || xplayer > xenemy)
             {
                 //change speed
                 playerspeed = playerspeed * (-1);
                 enemyspeed = enemyspeed * (-1);
+                //change x coord
+                xplayer = xplayer + playerspeed;
+                xenemy = xenemy + enemyspeed;
+
                 //random damage
                 var dmage1 = player.CountDamage();
                 var dmg2 = enemy.CountDamage();
