@@ -72,19 +72,20 @@ public class battlePlayer : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        System.Random rnd = new System.Random();
-        player = new Player(rnd);
-        enemy = new Player(rnd);
-        //TODO: выбор персонажа (либо в меню либо случайно из 3-5 картинок в Ассетах)
+        //System.Random rnd = new System.Random();
+        //player = new Player(rnd);
+        //enemy = new Player(rnd);
+        ////TODO: выбор персонажа (либо в меню либо случайно из 3-5 картинок в Ассетах)
 
-        player.name = playerName;
-        enemy.name = "KULAK";
+        //player.name = playerName;
+        //enemy.name = "KULAK";
 
-        //show heal point to TextDamage
-        var classtext = GameObject.Find("TextDamage").GetComponent<Text>();
-        classtext.text = player.name+" HP=" +player.HealPoints+" -- "+enemy.name+" HP="+enemy.HealPoints;
-        classtext.color = Color.green;
-        gameend = false;
+        ////show heal point to TextDamage
+        //var classtext = GameObject.Find("TextDamage").GetComponent<Text>();
+        //classtext.text = player.name+" HP=" +player.HealPoints+" -- "+enemy.name+" HP="+enemy.HealPoints;
+        //classtext.color = Color.green;
+        //gameend = false;
+        newgame();
     }
     int count = 0;
 
@@ -121,7 +122,31 @@ public class battlePlayer : MonoBehaviour
         transformP.position = new Vector3(xplayer, 0, 0);
         transformE.position = new Vector3(xenemy, 0, 0);
         gameend = false;
-
+        //player2 change sprite to ava2-ava6
+        //1)get sprite from assets
+        //2)set sprite to playerObj
+        int ava = rnd.Next(2, 6);
+        var sp = Resources.Load("ava"+ava.ToString().Trim()) as Sprite;
+        var render = playerObj.GetComponent<SpriteRenderer>();
+        render.sprite = sp;
+        //if (ava==2)
+        //{
+        //    var sp = Resources.Load("ava2") as Sprite;
+        //    var render = playerObj.GetComponent<SpriteRenderer>();
+        //    render.sprite = sp;
+        //}
+        //else if (ava==3)
+        //{
+        //    var sp = Resources.Load("ava3") as Sprite;
+        //    var render = playerObj.GetComponent<SpriteRenderer>();
+        //    render.sprite = sp;
+        //}
+        //else if (ava == 4)
+        //{ }
+        //else if (ava == 5)
+        //{ }
+        //else if (ava == 6)
+        //{ }
     }
     // Update is called once per frame
     void Update()
