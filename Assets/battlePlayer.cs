@@ -23,13 +23,15 @@ public class Player
         //set initial hp and damages
         gid = Guid.NewGuid().ToString();
         System.Random rondom = rnd;
-        minDamage = rondom.Next(1, 5);
+        minDamage = rondom.Next(2, 5);
         maxDamage = rondom.Next(8, 12);
-        HealPoints = rondom.Next(50, 100);
+        HealPoints = rondom.Next(minHP, maxHP);
     }
     public string gid { get; set; }
     public int maxDamage = 10;
     public int minDamage = 1;
+    public int maxHP = 40;
+    public int minHP = 20;
     public int CountDamage()
     {
         System.Random rnd = new System.Random();
@@ -53,8 +55,8 @@ public class Player
         //List<int> lst = new List<int>();
         dealedDamage.Add(damage);
 
-        
-        
+
+
     }
     public bool isAlive()
     {
@@ -66,8 +68,8 @@ public class battlePlayer : MonoBehaviour
 {
 
     public static string playerName = "";
-    Player player ;
-    Player enemy ;
+    Player player;
+    Player enemy;
     bool gameend = false;
     // Start is called before the first frame update
     void Start()
@@ -99,28 +101,30 @@ public class battlePlayer : MonoBehaviour
     {
         SceneManager.LoadScene("menu");
     }
-        public void newgame()
+    public void newgame()
     {
         System.Random rnd = new System.Random();
         player = new Player(rnd);
-        enemy = new Player(rnd); 
+        enemy = new Player(rnd);
         player.name = playerName;
         enemy.name = "KULAK";
         var classtext = GameObject.Find("TextDamage").GetComponent<Text>();
         classtext.text = player.name + " HP=" + player.HealPoints + " -- " + enemy.name + " HP=" + enemy.HealPoints;
         classtext.color = Color.green;
-        xplayer = -20;
+        //начальные Х координаты отрегулировать под анимацию игры
+        xplayer = -10;
         playerspeed = 2;
         enemyspeed = -2;
-        xenemy = 20;
+        xenemy = 10;
         //
         var playerObj = GameObject.Find("player2");
         var enemyObj = GameObject.Find("enemy");
         //get coordinates
         var transformP = playerObj.GetComponent<Transform>();
         var transformE = enemyObj.GetComponent<Transform>();
-        transformP.position = new Vector3(xplayer, 0, 0);
-        transformE.position = new Vector3(xenemy, 0, 0);
+        //09.03 позиция на +20 -20
+        transformP.position = new Vector3(-20, 0, 0);
+        transformE.position = new Vector3(20, 0, 0);
         gameend = false;
         //player2 change sprite to ava2-ava6
         //1)get sprite from assets
@@ -161,24 +165,40 @@ public class battlePlayer : MonoBehaviour
         //06.03 ошибка загрузки спрайтов в этой строке
         //нужно создать папку Resources
         //не помогло
-        var sp = Resources.Load(name) as Sprite;
-        if (sp != null)
+        //09.03 помогло вот что% находим ВСЕ ресурсы с именем
+        //и в цикле проверяем получилось преобразование в спрайт или нет
+        var resall = Resources.LoadAll(name);
+        string ress = "";
+        foreach (var obj in resall)
         {
-            var render = playerObj.GetComponent<SpriteRenderer>();
-            render.sprite = sp;
+            //ress = ress +" _ "+ obj.name;
+            var sp = obj as Sprite;
+            if (sp != null)
+            {
+                var render = playerObj.GetComponent<SpriteRenderer>();
+                render.sprite = sp;
 
+            }
+            else
+            {
+                //Debug.Log("NO SPRITE " + name);
+            }
         }
-        else
-        {
-            Debug.Log("NO SPRITE "+ name);
-        }
+        //Debug.Log("SPRITE TEST " + ress);
+        //var spp = Resources.Load(name);
+       
     }
     // Update is called once per frame
     void Update()
     {
         //animate player and enemy
         //60fps - once in 1s
-        if (count % 120 == 0 && gameend==false)
+        //09.03 замечено что по прошествии времени анимация расходитя с расчетами
+        //то есть в анимации Карыч (игрок) улетает каждый раз все правее и правее Врага
+        //и расчетное столкновение (когда Х равны) в анимации выглядит как 
+        //Игрок (изображение) сильно правее Врага
+        //TODO: поискать как отслеживать столкновение именно GameObject в игре.
+        if (count % 120 == 0 && gameend == false)
         {
             var playerObj = GameObject.Find("player2");
             var enemyObj = GameObject.Find("enemy");
@@ -208,8 +228,11 @@ public class battlePlayer : MonoBehaviour
             classtext.text = player.name + " HP=" + player.HealPoints + " -- " + enemy.name + " HP=" + enemy.HealPoints + " Xp=" + xplayer + " Xe=" + xenemy;
             //if collide - count damage, change speed
             //06.03 тщательнее прописать условие столкновения!
-            
-            if (xplayer >= xenemy)
+            //Игрок летит лева направо, его Х меньше 0
+            //так как х Игрока должен быть меньше Х Врага - то столкновение это когда Х равны
+            //и тогда надо поменять скорости в другом направлении и 
+            //и сделать "разлет" - то есть игрок летит влево враг Вправо
+            if (xplayer == xenemy)
             {
                 if (playerspeed > 0 && enemyspeed < 0)
                 {
@@ -219,55 +242,57 @@ public class battlePlayer : MonoBehaviour
                     //change x coord
                     xplayer = xplayer + playerspeed;
                     xenemy = xenemy + enemyspeed;
-
-                    //random damage
-                    var dmage1 = player.CountDamage();
-                    var dmg2 = enemy.CountDamage();
-                    player.dealdamage(dmg2);
-                    enemy.dealdamage(dmage1);
-                    
-                    if (player.isAlive() == false && enemy.isAlive() == false)
-                    {
-                        //listbox - массив dealedDamage вывести
-
-                        classtext.text = "TIE play";
-                        //stop update
-                        gameend = true;
-                    }
-                    else
-                    {
-                        if (player.isAlive() == false)
-                        {
-
-                            classtext.text = "player LOSE";
-                            //stop update
-                            gameend = true;
-
-                        }
-                        else if (enemy.isAlive() == false)
-                        {
-
-                            classtext.text = "player WIN";
-                            //stop update
-                            gameend = true;
-
-                        }
-                        else
-                        {
-                            //show damage HP on TextDamage text field
-
-                            
-                        }
-                    }
                 }
-                else 
+                else
                 {
                     //change x coord
                     xplayer = xplayer + playerspeed;
                     xenemy = xenemy + enemyspeed;
                 }
+
+
+                //random damage
+                var dmage1 = player.CountDamage();
+                var dmg2 = enemy.CountDamage();
+                player.dealdamage(dmg2);
+                enemy.dealdamage(dmage1);
+
+                if (player.isAlive() == false && enemy.isAlive() == false)
+                {
+                    //listbox - массив dealedDamage вывести
+
+                    classtext.text = "TIE play";
+                    //stop update
+                    gameend = true;
+                }
+                else
+                {
+                    if (player.isAlive() == false)
+                    {
+
+                        classtext.text = "player LOSE";
+                        //stop update
+                        gameend = true;
+
+                    }
+                    else if (enemy.isAlive() == false)
+                    {
+
+                        classtext.text = "player WIN";
+                        //stop update
+                        gameend = true;
+
+                    }
+                    else
+                    {
+                        //show damage HP on TextDamage text field
+
+
+                    }
+                }
+
             }
-            
+
         }
         count++;
     }
