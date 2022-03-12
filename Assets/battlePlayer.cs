@@ -23,18 +23,29 @@ public class Player
         //set initial hp and damages
         gid = Guid.NewGuid().ToString();
         System.Random rondom = rnd;
-        minDamage = rondom.Next(2, 5);
-        maxDamage = rondom.Next(8, 12);
+        minDamage = rondom.Next(minDamageLeft, minDamageRight);
+        maxDamage = rondom.Next(maxDamageLeft, maxDamageRight);
         HealPoints = rondom.Next(minHP, maxHP);
+        name = "PLAYER";
+        dealedDamage = new List<int>();
     }
     public string gid { get; set; }
+
     public int maxDamage = 10;
     public int minDamage = 1;
+    //12.03 шесть параметров которые регулируют игру
+    //диапазон минимального урона
+    public int minDamageLeft = 3;
+    public int minDamageRight = 6;
+    //диапазон максимального урона
+    public int maxDamageLeft = 9;
+    public int maxDamageRight = 13;
+    //здоровье
     public int maxHP = 40;
     public int minHP = 20;
-    public int CountDamage()
+    public int CountDamage(System.Random rnd)
     {
-        System.Random rnd = new System.Random();
+
         return rnd.Next(minDamage, maxDamage);
     }
     //dealed damage array (list)
@@ -60,8 +71,8 @@ public class Player
     }
     public bool isAlive()
     {
-        //return true if alive
-        return HealPoints > 0;
+        //return true if alive - ХП больше 0
+        return (HealPoints > 0);
     }
 }
 public class battlePlayer : MonoBehaviour
@@ -91,8 +102,8 @@ public class battlePlayer : MonoBehaviour
     }
     int count = 0;
 
-    int lefrborder = -30;
-    int rightborder = 30;
+    int lefrborder = -25;
+    int rightborder = 25;
     int playerspeed = 2;
     int enemyspeed = -2;
     int xplayer = -20;
@@ -106,7 +117,9 @@ public class battlePlayer : MonoBehaviour
         System.Random rnd = new System.Random();
         player = new Player(rnd);
         enemy = new Player(rnd);
-        player.name = playerName;
+        if (playerName != "")
+            player.name = playerName;
+
         enemy.name = "KULAK";
         var classtext = GameObject.Find("TextDamage").GetComponent<Text>();
         classtext.text = player.name + " HP=" + player.HealPoints + " -- " + enemy.name + " HP=" + enemy.HealPoints;
@@ -165,7 +178,7 @@ public class battlePlayer : MonoBehaviour
         //06.03 ошибка загрузки спрайтов в этой строке
         //нужно создать папку Resources
         //не помогло
-        //09.03 помогло вот что% находим ВСЕ ресурсы с именем
+        //09.03 помогло вот что находим ВСЕ ресурсы с именем
         //и в цикле проверяем получилось преобразование в спрайт или нет
         var resall = Resources.LoadAll(name);
         string ress = "";
@@ -186,7 +199,7 @@ public class battlePlayer : MonoBehaviour
         }
         //Debug.Log("SPRITE TEST " + ress);
         //var spp = Resources.Load(name);
-       
+
     }
     // Update is called once per frame
     void Update()
@@ -197,88 +210,115 @@ public class battlePlayer : MonoBehaviour
         //то есть в анимации Карыч (игрок) улетает каждый раз все правее и правее Врага
         //и расчетное столкновение (когда Х равны) в анимации выглядит как 
         //Игрок (изображение) сильно правее Врага
+        //
         //TODO: поискать как отслеживать столкновение именно GameObject в игре.
-        if (count % 120 == 0 && gameend == false)
+        //наверняка есть события которые можно отследить.
+        //
+        //12.03 еще осталось сделать выбор игрока на экране меню.
+        //чтоб рандомный персонаж вылетал из "сундука".
+        //и фоны поля битвы разные рандомные
+        //
+        if (gameend == false)
         {
-            var playerObj = GameObject.Find("player2");
-            var enemyObj = GameObject.Find("enemy");
-            //get coordinates
-            var transformP = playerObj.GetComponent<Transform>();
-            var transformE = enemyObj.GetComponent<Transform>();
-            //transform2.position += new Vector3(30, 30, 0);
-            //translate - двигает из того места где уже был
-
-            transformP.Translate(playerspeed, 0, 0);
-            transformE.Translate(enemyspeed, 0, 0);
-            //change x coord
-            xplayer = xplayer + playerspeed;
-            xenemy = xenemy + enemyspeed;
-            //if not collide - move them
-
-            //if border - change speed
-            if (xenemy >= rightborder || xenemy <= lefrborder)
-                //change speed
-                enemyspeed = enemyspeed * (-1);
-            //06.03 было неверное условие!
-            if (xplayer <= lefrborder || xplayer >= rightborder)
-                //change speed
-                playerspeed = playerspeed * (-1);
-
-            var classtext = GameObject.Find("TextDamage").GetComponent<Text>();
-            classtext.text = player.name + " HP=" + player.HealPoints + " -- " + enemy.name + " HP=" + enemy.HealPoints + " Xp=" + xplayer + " Xe=" + xenemy;
-            //if collide - count damage, change speed
-            //06.03 тщательнее прописать условие столкновения!
-            //Игрок летит лева направо, его Х меньше 0
-            //так как х Игрока должен быть меньше Х Врага - то столкновение это когда Х равны
-            //и тогда надо поменять скорости в другом направлении и 
-            //и сделать "разлет" - то есть игрок летит влево враг Вправо
-            if (xplayer == xenemy)
+            if (count % 120 == 0)
             {
-                if (playerspeed > 0 && enemyspeed < 0)
-                {
+                var playerObj = GameObject.Find("player2");
+                var enemyObj = GameObject.Find("enemy");
+                //get coordinates
+                var transformP = playerObj.GetComponent<Transform>();
+                var transformE = enemyObj.GetComponent<Transform>();
+                //transform2.position += new Vector3(30, 30, 0);
+                //translate - двигает из того места где уже был
+
+
+                //12.03 движение объектов
+                transformP.Translate(playerspeed, 0, 0);
+                transformE.Translate(enemyspeed, 0, 0);
+                //12.03 получить координаты Объектов Игрока и Врага и проверить равенство
+                bool unityCoordEquals = false;
+
+                unityCoordEquals = (playerObj.transform.position.x == enemyObj.transform.position.x);
+                //change x coord
+                xplayer = xplayer + playerspeed;
+                xenemy = xenemy + enemyspeed;
+                //if not collide - move them
+
+                //if border - change speed
+                if (xenemy >= rightborder || xenemy <= lefrborder)
+                    //change speed
+                    enemyspeed = enemyspeed * (-1);
+                //06.03 было неверное условие!
+                if (xplayer <= lefrborder || xplayer >= rightborder)
                     //change speed
                     playerspeed = playerspeed * (-1);
-                    enemyspeed = enemyspeed * (-1);
-                    //change x coord
-                    xplayer = xplayer + playerspeed;
-                    xenemy = xenemy + enemyspeed;
-                }
-                else
+
+                var classtext = GameObject.Find("TextDamage").GetComponent<Text>();
+                classtext.text = player.name + " HP=" + player.HealPoints + " -- "
+                    + enemy.name + " HP=" + enemy.HealPoints;
+                //if collide - count damage, change speed
+                //06.03 тщательнее прописать условие столкновения!
+                //Игрок летит лева направо, его Х меньше 0
+                //так как х Игрока должен быть меньше Х Врага - то столкновение это когда Х равны
+                //и тогда надо поменять скорости в другом направлении и 
+                //и сделать "разлет" - то есть игрок летит влево враг Вправо
+                //if (xplayer == xenemy || unityCoordEquals==true)
+                if (unityCoordEquals == true && gameend == false)
                 {
-                    //change x coord
-                    xplayer = xplayer + playerspeed;
-                    xenemy = xenemy + enemyspeed;
-                }
+                    if (playerspeed > 0 && enemyspeed < 0)
+                    {
+                        //change speed
+                        playerspeed = playerspeed * (-1);
+                        enemyspeed = enemyspeed * (-1);
+                        //change x coord
+                        xplayer = xplayer + playerspeed;
+                        xenemy = xenemy + enemyspeed;
+                        //12.03 движение объектов
+                        transformP.Translate(playerspeed, 0, 0);
+                        transformE.Translate(enemyspeed, 0, 0);
+                    }
+                    else
+                    {
+                        //change x coord
+                        xplayer = xplayer + playerspeed;
+                        xenemy = xenemy + enemyspeed;
+                        //12.03 движение объектов
+                        transformP.Translate(playerspeed, 0, 0);
+                        transformE.Translate(enemyspeed, 0, 0);
+                    }
 
 
-                //random damage
-                var dmage1 = player.CountDamage();
-                var dmg2 = enemy.CountDamage();
-                player.dealdamage(dmg2);
-                enemy.dealdamage(dmage1);
+                    //random damage
+                    System.Random rnd = new System.Random();
+                    var dmage1 = player.CountDamage(rnd);
+                    var dmg2 = enemy.CountDamage(rnd);
+                    int lsthpp = player.HealPoints;
+                    int lsthpe = enemy.HealPoints;
+                    player.dealdamage(dmg2);
+                    enemy.dealdamage(dmage1);
 
-                if (player.isAlive() == false && enemy.isAlive() == false)
-                {
-                    //listbox - массив dealedDamage вывести
+                    if (player.HealPoints <= 0 && enemy.HealPoints <= 0)
+                    {
+                        //listbox - массив dealedDamage вывести
 
-                    classtext.text = "TIE play";
-                    //stop update
-                    gameend = true;
-                }
-                else
-                {
-                    if (player.isAlive() == false)
+                        classtext.text = "TIE play"
+                            + " LAST HP Pl=" + lsthpp + " en=" + lsthpe + " Dmg1PE=" + dmage1 + " dmg2EP=" + dmg2;
+                        //stop update
+                        gameend = true;
+                    }
+                    else if (player.HealPoints <= 0 && enemy.HealPoints > 0)
                     {
 
-                        classtext.text = "player LOSE";
+                        classtext.text = "player LOSE"
+                            + " LAST HP Pl=" + lsthpp + " en=" + lsthpe + " Dmg1=" + dmage1 + " dmg2=" + dmg2;
                         //stop update
                         gameend = true;
 
                     }
-                    else if (enemy.isAlive() == false)
+                    else if (enemy.HealPoints <= 0 && player.HealPoints > 0)
                     {
 
-                        classtext.text = "player WIN";
+                        classtext.text = "player WIN"
+                            + " LAST HP Pl=" + lsthpp + " en=" + lsthpe + " Dmg1=" + dmage1 + " dmg2=" + dmg2;
                         //stop update
                         gameend = true;
 
@@ -286,13 +326,14 @@ public class battlePlayer : MonoBehaviour
                     else
                     {
                         //show damage HP on TextDamage text field
-
+                        //оба живые
 
                     }
+
+
                 }
 
             }
-
         }
         count++;
     }
