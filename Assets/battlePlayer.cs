@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-
+using UnityEditor.Android;
 public class Player
 {
     public int Exp = 0;
@@ -102,8 +102,8 @@ public class battlePlayer : MonoBehaviour
     }
     int count = 0;
 
-    int lefrborder = -25;
-    int rightborder = 25;
+    int lefrborder = -20;
+    int rightborder = 20;
     int playerspeed = 2;
     int enemyspeed = -2;
     int xplayer = -20;
@@ -201,6 +201,10 @@ public class battlePlayer : MonoBehaviour
         //var spp = Resources.Load(name);
 
     }
+    /// <summary>
+    /// 120 for PC, 30 for android
+    /// </summary>
+    int animationSpeed = 120;
     // Update is called once per frame
     void Update()
     {
@@ -211,16 +215,26 @@ public class battlePlayer : MonoBehaviour
         //и расчетное столкновение (когда Х равны) в анимации выглядит как 
         //Игрок (изображение) сильно правее Врага
         //
-        //TODO: поискать как отслеживать столкновение именно GameObject в игре.
+        // поискать как отслеживать столкновение именно GameObject в игре.
         //наверняка есть события которые можно отследить.
         //
         //12.03 еще осталось сделать выбор игрока на экране меню.
         //чтоб рандомный персонаж вылетал из "сундука".
         //и фоны поля битвы разные рандомные
         //
+        //13.03 отследить запуск на андриде и ПК и поставить разные скорости анимации
+        //TODO сделать лидерборд с кубками и сохранять его в текст\SQL
+        //
+        bool platformAndroid = false;
+
+        if (Application.platform == RuntimePlatform.Android || Application.platform == RuntimePlatform.IPhonePlayer)
+            platformAndroid = true;
+        //более быстрая скорость анимации на телефоне
+        if (platformAndroid) animationSpeed = 30;
+
         if (gameend == false)
         {
-            if (count % 120 == 0)
+            if (count % animationSpeed == 0)
             {
                 var playerObj = GameObject.Find("player2");
                 var enemyObj = GameObject.Find("enemy");
@@ -304,6 +318,9 @@ public class battlePlayer : MonoBehaviour
                             + " LAST HP Pl=" + lsthpp + " en=" + lsthpe + " Dmg1PE=" + dmage1 + " dmg2EP=" + dmg2;
                         //stop update
                         gameend = true;
+                        //лидерборд
+                        SaveLeaderBoard(player, enemy, "TIE");
+                        
                     }
                     else if (player.HealPoints <= 0 && enemy.HealPoints > 0)
                     {
@@ -312,7 +329,7 @@ public class battlePlayer : MonoBehaviour
                             + " LAST HP Pl=" + lsthpp + " en=" + lsthpe + " Dmg1=" + dmage1 + " dmg2=" + dmg2;
                         //stop update
                         gameend = true;
-
+                        SaveLeaderBoard(player, enemy, "LOSE");
                     }
                     else if (enemy.HealPoints <= 0 && player.HealPoints > 0)
                     {
@@ -321,7 +338,7 @@ public class battlePlayer : MonoBehaviour
                             + " LAST HP Pl=" + lsthpp + " en=" + lsthpe + " Dmg1=" + dmage1 + " dmg2=" + dmg2;
                         //stop update
                         gameend = true;
-
+                        SaveLeaderBoard(player, enemy, "WIN");
                     }
                     else
                     {
@@ -336,5 +353,43 @@ public class battlePlayer : MonoBehaviour
             }
         }
         count++;
+    }
+
+    private void SaveLeaderBoard(Player player, Player enemy, string v)
+    {
+        //save to text
+        //нужно разрешение для создания файлов на Андроид?
+        string result = "";
+        int sumplayer = 0;
+        foreach (var item in player.dealedDamage)
+        {
+            sumplayer = sumplayer + item;
+        }
+        int sumnemy = 0;
+        foreach (var item in enemy.dealedDamage)
+        {
+            sumnemy = sumnemy + item;
+        }
+        result = "Player dealedDamage="+sumplayer+" enemy="+ sumnemy+" res="+v;
+        if (Application.platform == RuntimePlatform.Android || Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            //permission
+            if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.ExternalStorageWrite))
+            {
+                UnityEngine.Android.Permission.RequestUserPermission(UnityEngine.Android.Permission.ExternalStorageWrite);
+                //UnityEngine.Android.Permission.RequestUserPermission("android.permission.WRITE_EXTERNAL_STORAGE");
+                //create text (не работает на Андроид без разрешения доступа к файловой системе!)
+                string tempPath = System.IO.Path.Combine(Application.persistentDataPath, "clashscore.txt");
+                System.IO.File.AppendAllText(tempPath, result);
+            }
+            
+        }
+        else
+        {
+            //create text (не работает на Андроид без разрешения доступа к файловой системе!)
+            string tempPath = System.IO.Path.Combine(Application.persistentDataPath, "clashscore.txt");
+            System.IO.File.AppendAllText(tempPath, result);
+        }
+       
     }
 }
