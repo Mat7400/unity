@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using UnityEditor.Android;
+
 public class Player
 {
     public int Exp = 0;
@@ -85,10 +85,14 @@ public class battlePlayer : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        if (Application.platform == RuntimePlatform.Android || Application.platform == RuntimePlatform.IPhonePlayer)
+            UnityEngine.Android.Permission.RequestUserPermission(UnityEngine.Android.Permission.ExternalStorageWrite);
+
         //System.Random rnd = new System.Random();
         //player = new Player(rnd);
         //enemy = new Player(rnd);
-        ////TODO: выбор персонажа (либо в меню либо случайно из 3-5 картинок в Ассетах)
+        // TODO: выбор персонажа (либо в меню 
+        // V либо случайно из 3-5 картинок в Ассетах)
 
         //player.name = playerName;
         //enemy.name = "KULAK";
@@ -225,8 +229,18 @@ public class battlePlayer : MonoBehaviour
         //13.03 отследить запуск на андриде и ПК и поставить разные скорости анимации
         //TODO сделать лидерборд с кубками и сохранять его в текст\SQL
         //
-        bool platformAndroid = false;
+        //15.03 сервер с лидербордом онлайн
+        //у нас есть два строковых поля и 4 числа (победы, поражения, сумма урона от Игрока и от Врага)
+        //нужен простой сервис хранения этих данных и ведения лидерборда.
+        //берем AirTable http API https://airtable.com/api/meta
+        //
+        //вопрос: доступ в интернет для андроид приложения. сможет ли оно отправить данные http?
+        //
+        airtable.AirTableSaver saver = new airtable.AirTableSaver();
+        saver.saveToCloud(player, enemy, 1, 1);
 
+        bool platformAndroid = false;
+        
         if (Application.platform == RuntimePlatform.Android || Application.platform == RuntimePlatform.IPhonePlayer)
             platformAndroid = true;
         //более быстрая скорость анимации на телефоне
