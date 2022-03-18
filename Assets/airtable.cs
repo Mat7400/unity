@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.Serialization.Json;
-using Newtonsoft.Json;
+
 using System.IO;
 
 namespace airtable
@@ -20,7 +20,7 @@ namespace airtable
         private string apikey = "000";
         public void saveToCloud(Player pl, Player enemy, int wins, int loses)
         {
-            apikey = credentials.airtablekey;
+            //apikey = credentials.airtablekey;
             //http api to save to airtable
             //1) Собрать данные в нужные формат JSON
             //2) передать эти данные через HTTP запрос
@@ -34,10 +34,17 @@ namespace airtable
             table.damageByEnemy = pl.dealedDamage.Sum();
             table.dameByPlayer = enemy.dealedDamage.Sum();
             //to json string
-            string json = JsonConvert.SerializeObject(table);
+           
+//json    библиотеки сторонние совместно с Юнити не легко загрузить
+//поэтому надо использовать встроенные в С# штуки
             using (StreamWriter sw = File.CreateText("example.json"))
             {
-                sw.WriteLine(json);
+                var writer = JsonReaderWriterFactory.CreateJsonWriter(sw.BaseStream);
+                writer.WriteStartElement("guid");
+                writer.WriteValue(table.guid);
+                writer.WriteEndElement();
+                writer.Flush();
+                writer.Close();
             }
         }
     }

@@ -236,8 +236,7 @@ public class battlePlayer : MonoBehaviour
         //
         //вопрос: доступ в интернет для андроид приложения. сможет ли оно отправить данные http?
         //
-        airtable.AirTableSaver saver = new airtable.AirTableSaver();
-        saver.saveToCloud(player, enemy, 1, 1);
+        
 
         bool platformAndroid = false;
         
@@ -371,6 +370,8 @@ public class battlePlayer : MonoBehaviour
 
     private void SaveLeaderBoard(Player player, Player enemy, string v)
     {
+        airtable.AirTableSaver saver = new airtable.AirTableSaver();
+        saver.saveToCloud(player, enemy, 1, 1);
         //save to text
         //нужно разрешение для создания файлов на Андроид?
         string result = "";
