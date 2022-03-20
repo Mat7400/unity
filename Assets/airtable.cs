@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Runtime.Serialization.Json;
 
 using System.IO;
+using System.Net.Http;
+using System.Net;
 
 namespace airtable
 {
@@ -18,9 +20,10 @@ namespace airtable
         /// v2 encrypt key and store encrypted value. (aes) where store encryption pass?
         /// </summary>
         private string apikey = "000";
-        public void saveToCloud(Player pl, Player enemy, int wins, int loses)
+        private string url= "https://api.airtable.com/v0/appIqXpzgnpinPJnv/unitygame";
+        public string saveToCloud(Player pl, Player enemy, int wins, int loses)
         {
-            //apikey = credentials.airtablekey;
+            apikey = "--";
             //http api to save to airtable
             //1) Собрать данные в нужные формат JSON
             //2) передать эти данные через HTTP запрос
@@ -30,22 +33,57 @@ namespace airtable
             table.playerName = pl.name;
             table.wins = wins;
             table.loses = loses;
-
+            string data = "";
             table.damageByEnemy = pl.dealedDamage.Sum();
             table.dameByPlayer = enemy.dealedDamage.Sum();
             //to json string
            
 //json    библиотеки сторонние совместно с Юнити не легко загрузить
 //поэтому надо использовать встроенные в С# штуки
-            using (StreamWriter sw = File.CreateText("example.json"))
+            using (FileStream fs = new FileStream("example.json", FileMode.OpenOrCreate))
             {
-                var writer = JsonReaderWriterFactory.CreateJsonWriter(sw.BaseStream);
-                writer.WriteStartElement("guid");
-                writer.WriteValue(table.guid);
-                writer.WriteEndElement();
-                writer.Flush();
-                writer.Close();
+                //var writer = JsonReaderWriterFactory.CreateJsonWriter(sw.BaseStream);
+                //writer.WriteStartElement("guid");
+                //writer.WriteValue(table.guid);
+                //writer.WriteEndElement();
+                //writer.Flush();
+                //writer.Close();
+                DataContractJsonSerializer formatter = new DataContractJsonSerializer(typeof(unityGameTable));
+                formatter.WriteObject(fs, table);
+                MemoryStream ms = new MemoryStream();
+                formatter.WriteObject(ms, table);
+                //HTTP 
+                var request = WebRequest.Create(url);
+                request.Method = "POST";
+
+
+                ////UNPROCESSABLE ENTITY
+                //нужны поля records и fields как в документации
+                //https://airtable.com/appIqXpzgnpinPJnv/api/docs#curl/table:unitygame:create
+                var json = Encoding.UTF8.GetString(ms.ToArray());
+
+                byte[] byteArray = Encoding.UTF8.GetBytes(json);
+
+                request.ContentType = "application/json";
+                request.ContentLength = byteArray.Length;
+
+                request.Headers.Add("Authorization: Bearer " + apikey);
+
+                var reqStream = request.GetRequestStream();
+                reqStream.Write(byteArray, 0, byteArray.Length);
+
+                var response = request.GetResponse();
+                //Console.WriteLine(((HttpWebResponse)response).StatusDescription);
+
+                var respStream = response.GetResponseStream();
+
+                var reader = new StreamReader(respStream);
+                 data = reader.ReadToEnd();
+                //Console.WriteLine(data);
+                
             }
+            return data;
+            //следующий этап - почитать документацию ЭйрТейбл и понять какой им нужен формат JSON
         }
     }
     //этот класс легко преобразовать в JSON формат

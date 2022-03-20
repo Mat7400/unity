@@ -91,7 +91,7 @@ public class battlePlayer : MonoBehaviour
         //System.Random rnd = new System.Random();
         //player = new Player(rnd);
         //enemy = new Player(rnd);
-        // TODO: выбор персонажа (либо в меню 
+        // тTODO: выбор персонажа (либо в меню 
         // V либо случайно из 3-5 картинок в Ассетах)
 
         //player.name = playerName;
@@ -371,7 +371,8 @@ public class battlePlayer : MonoBehaviour
     private void SaveLeaderBoard(Player player, Player enemy, string v)
     {
         airtable.AirTableSaver saver = new airtable.AirTableSaver();
-        saver.saveToCloud(player, enemy, 1, 1);
+        //var res = saver.saveToCloud(player, enemy, 1, 1);
+        Debug.Log("JSON OK");
         //save to text
         //нужно разрешение для создания файлов на Андроид?
         string result = "";
